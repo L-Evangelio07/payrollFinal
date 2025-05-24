@@ -69,5 +69,8 @@ public class EmployeeTableModel extends AbstractTableModel {
         employees.set(rowIndex, updatedEmployee);
         fireTableRowsUpdated(rowIndex, rowIndex);
     }
+    public List<Employee> getEmployees(){
+        return new ArrayList<>(employees);
+    }
 }
 

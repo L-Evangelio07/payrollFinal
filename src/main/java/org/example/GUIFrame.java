@@ -8,8 +8,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.example.Deductions.computeBIRTax;
+import java.util.List;
+import javax.swing.*;
+import java.awt.*;
 
 public class GUIFrame extends JFrame {
     JLabel IdLabel, nameLabel, positionLabel, dailySalaryLabel, days_present_Label, daysAbsentLabel;
@@ -252,59 +253,28 @@ public class GUIFrame extends JFrame {
 
 
         reportButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    StringBuilder reportBuilder = new StringBuilder();
-                    reportBuilder.append("=== YEAR-END BIR TAX REPORT FOR ALL EMPLOYEES ===\n\n");
 
-                    for (Employee emp : payrollManager.getEmployees()) {
-                        Payslip payslip = payrollManager.generatePayslip(emp);
-                        if (payslip != null) {
-                            double annualGross = payslip.getGrossSalary() * payslip.getEmployee().getDaysPresent() * 52;
-                            double totalSSS = payslip.getSss() * 52;
-                            double totalPhilHealth = payslip.getPhilHealth() * 52;
-                            double totalPagIbig = payslip.getPagIbig() * 52;
-                            double taxableIncome = annualGross - (totalSSS + totalPhilHealth + totalPagIbig);
-                            double annualTax = computeBIRTax(
-                                    payslip.getGrossSalary(),
-                                    payslip.getSss(),
-                                    payslip.getPhilHealth(),
-                                    payslip.getPagIbig()
-                            );
-
-                            reportBuilder.append(String.format(
-                                    "Employee: %s\nID: %s\nPosition: %s\n" +
-                                            "Monthly Gross: ₱%,.2f\n" +
-                                            "Annual Gross: ₱%,.2f\n" +
-                                            "Total SSS: ₱%,.2f\n" +
-                                            "Total PhilHealth: ₱%,.2f\n" +
-                                            "Total Pag-IBIG: ₱%,.2f\n" +
-                                            "Taxable Income: ₱%,.2f\n" +
-                                            "Annual Withholding Tax: ₱%,.2f\n\n",
-                                    emp.getName(), emp.getId(), emp.getPosition(),
-                                    payslip.getGrossSalary(),
-                                    annualGross,
-                                    totalSSS,
-                                    totalPhilHealth,
-                                    totalPagIbig,
-                                    taxableIncome,
-                                    annualTax
-                            ));
-                            reportBuilder.append("--------------------------------------------\n");
-                        }
+                try{
+                    List<Employee> employees = tableModel.getEmployees(); // Your existing list
+                    FireStoreConnection fireStoreConnection = new FireStoreConnection();
+                    List<Employee> emp = fireStoreConnection.getAllEmployeesFromFirestore();
+                    if (employees.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "No employees found.");
+                        return;
                     }
-
-                    new YearEndReportFrame(reportBuilder.toString()).setVisible(true);
-
+                    new YearEndReportFrame(employees);
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     JOptionPane.showMessageDialog(null,
-                            "Error generating year-end BIR report: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                            "Error: " + ex.getMessage(),
+                            "Report Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
     }
-
     private void clearInputFields() {
         idField.setText("");
         nameField.setText("");
@@ -334,3 +304,4 @@ public class GUIFrame extends JFrame {
         container.add(component, constraints);
     }
 }
+
