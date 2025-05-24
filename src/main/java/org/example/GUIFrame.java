@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.example.Deductions.computeBIRTax;
+
 public class GUIFrame extends JFrame {
     JLabel IdLabel, nameLabel, positionLabel, dailySalaryLabel, days_present_Label, daysAbsentLabel;
     JTextField idField, nameField, positionField, dailySalaryField, daysPresentField, daysAbsentField;
@@ -251,34 +253,56 @@ public class GUIFrame extends JFrame {
 
         reportButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                List<Payslip> payslips = payrollManager.getPayslips();
-                double totalGross = 0, totalPagIbig = 0, totalPhilHealth = 0, totalSSS = 0, totalTax = 0, totalNet = 0;
+                try {
+                    StringBuilder reportBuilder = new StringBuilder();
+                    reportBuilder.append("=== YEAR-END BIR TAX REPORT FOR ALL EMPLOYEES ===\n\n");
 
-                for (Payslip slip : payslips) {
-                    totalGross += slip.getGrossSalary();
-                    totalPagIbig += slip.getPagIbig();
-                    totalPhilHealth += slip.getPhilHealth();
-                    totalSSS += slip.getSss();
-                    totalTax += slip.getIncomeTax();
-                    totalNet += slip.getNetPay();
+                    for (Employee emp : payrollManager.getEmployees()) {
+                        Payslip payslip = payrollManager.generatePayslip(emp);
+                        if (payslip != null) {
+                            double annualGross = payslip.getGrossSalary() * payslip.getEmployee().getDaysPresent() * 52;
+                            double totalSSS = payslip.getSss() * 52;
+                            double totalPhilHealth = payslip.getPhilHealth() * 52;
+                            double totalPagIbig = payslip.getPagIbig() * 52;
+                            double taxableIncome = annualGross - (totalSSS + totalPhilHealth + totalPagIbig);
+                            double annualTax = computeBIRTax(
+                                    payslip.getGrossSalary(),
+                                    payslip.getSss(),
+                                    payslip.getPhilHealth(),
+                                    payslip.getPagIbig()
+                            );
+
+                            reportBuilder.append(String.format(
+                                    "Employee: %s\nID: %s\nPosition: %s\n" +
+                                            "Monthly Gross: ₱%,.2f\n" +
+                                            "Annual Gross: ₱%,.2f\n" +
+                                            "Total SSS: ₱%,.2f\n" +
+                                            "Total PhilHealth: ₱%,.2f\n" +
+                                            "Total Pag-IBIG: ₱%,.2f\n" +
+                                            "Taxable Income: ₱%,.2f\n" +
+                                            "Annual Withholding Tax: ₱%,.2f\n\n",
+                                    emp.getName(), emp.getId(), emp.getPosition(),
+                                    payslip.getGrossSalary(),
+                                    annualGross,
+                                    totalSSS,
+                                    totalPhilHealth,
+                                    totalPagIbig,
+                                    taxableIncome,
+                                    annualTax
+                            ));
+                            reportBuilder.append("--------------------------------------------\n");
+                        }
+                    }
+
+                    new YearEndReportFrame(reportBuilder.toString()).setVisible(true);
+
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null,
+                            "Error generating year-end BIR report: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 }
-
-                StringBuilder report = new StringBuilder();
-                report.append("=============================================\n");
-                report.append("              YEAR-END REPORT\n");
-                report.append("=============================================\n");
-                report.append(String.format("Total Gross Pay: ₱%,.2f\n", totalGross));
-                report.append(String.format("Total Pag-IBIG Contributions: ₱%,.2f\n", totalPagIbig));
-                report.append(String.format("Total PhilHealth Contributions: ₱%,.2f\n", totalPhilHealth));
-                report.append(String.format("Total SSS Contributions: ₱%,.2f\n", totalSSS));
-                report.append(String.format("Total Income Tax: ₱%,.2f\n", totalTax));
-                report.append(String.format("Total Net Pay: ₱%,.2f\n", totalNet));
-                report.append("=============================================\n");
-
-                new YearEndReportFrame(report.toString()); // display on a new frame
             }
         });
-
     }
 
     private void clearInputFields() {

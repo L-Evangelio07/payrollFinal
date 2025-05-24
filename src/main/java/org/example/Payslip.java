@@ -14,18 +14,6 @@ public class Payslip {
         this.netPay = getNetPay();
     }
 
-//    public Payslip(Employee employee) {
-//        this.employee = employee;
-//        grossSalary = employee.computeGrossSalary();
-//
-//        pagIbig = Deductions.computePagIbig();
-//        philHealth = Deductions.computePhilHealth(grossSalary);
-//        sss = Deductions.computeSSS(grossSalary);
-//        incomeTax = Deductions.computeIncomeTax(grossSalary, pagIbig, philHealth, sss);
-//
-//        double totalDeduction = pagIbig + philHealth + sss + incomeTax;
-//        netPay = grossSalary - totalDeduction;
-//    }
 
     public double getTotalDeductions() {
         return sss + philHealth + pagIbig + incomeTax;

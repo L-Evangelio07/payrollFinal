@@ -74,4 +74,31 @@ public class Deductions {
 
         return Math.max(0, incomeTax);
     }
+
+    public static double computeBIRTax(double dailySalary, int daysPresent, double pagibig, double philhealth, double sss){
+
+        double annualGross = dailySalary * daysPresent;
+
+        double totalSSS = sss * daysPresent;
+        double totalPhilHealth = philhealth * daysPresent;
+        double totalPagIbig = pagibig * daysPresent;
+
+        double taxableIncome = annualGross - (totalSSS + totalPhilHealth + totalPagIbig);
+
+        double tax;
+
+        if (taxableIncome <= 20_833) {
+            return 0.0;
+        } else if (taxableIncome <= 33_332) {
+            return (taxableIncome - 20_833) * 0.20;
+        } else if (taxableIncome <= 66_666) {
+            return 2_500 + ((taxableIncome - 33_333) * 0.25);
+        } else if (taxableIncome <= 166_666) {
+            return 10_833.33 + ((taxableIncome - 66_667) * 0.30);
+        } else if (taxableIncome <= 666_666) {
+            return 40_833.33 + ((taxableIncome - 166_667) * 0.32);
+        } else {
+            return 200_833.33 + ((taxableIncome - 666_666) * 0.35);
+        }
+    }
 }
